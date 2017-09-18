@@ -155,25 +155,21 @@ def depthFirstSearch(problem):
 def breadthFirstSearch(problem):
 	"""Search the node of least total cost first."""
 
-	# total number of goals remaining in the problem
-	goals_remaining = problem.totalGoals
-
 	# get the start state
 	start_state = problem.getStartState()
-
-	# create path_to_goal stack to store the most optimum path from start to goal
-	path_from_start = []
-	path_start_state = start_state
 
 	# create visited list to maintain explored nodes of a graph
 	visited = set()
 
-	# initialize a queue for BFS
-	queue = util.Queue()
+	# create path_to_goal stack to store the most optimum path from start to goal
+	path_from_start = []
 
 	# check if the start_state is the goal state
-	if problem.isGoalState(start_state) and problem.goals_remaining == 0:
+	if problem.isGoalState(start_state):
 		return []
+
+	# initialize a queue for BFS
+	queue = util.Queue()
 
 	"""
 		store the information in `node` data structure
@@ -186,27 +182,23 @@ def breadthFirstSearch(problem):
 	start_node = Node(start_state, None, None, 0)
 	queue.push(start_node)
 
-	# core of BFS
-	while not queue.isEmpty()
+	# core of Uniform Cost Search
+	while not queue.isEmpty():
 		cur_node = queue.pop()
 		# check if this node has been visited
 		if cur_node not in visited:
 			visited.add(cur_node)
 			if problem.isGoalState(cur_node.state):
-				# decrease number of remaining goals and add to path
-				goals_remaining -= 1
-				import pdb
-				pdb.set_trace()
+				break
 			# recursiverly add node's successor
 			for successor_state in problem.getSuccessors(cur_node.state):
-				successor_node = Node(successor_state[0], cur_node, successor_state[1], 0)
+				successor_node = Node(successor_state[0], cur_node, successor_state[1], cur_node.cost_from_start + successor_state[2])
 				queue.push(successor_node)
 
 	# navigate the parent pointers to get the path from start
-	tmp = cur_node
-	while tmp.state is not path_start_state:
-		path_from_start.append(tmp.dir_from_parent)
-		tmp = tmp.parent
+	while cur_node.dir_from_parent != None:
+		path_from_start.append(cur_node.dir_from_parent)
+		cur_node = cur_node.parent
 
 	path_from_start.reverse()
 
