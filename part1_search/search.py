@@ -158,51 +158,41 @@ def breadthFirstSearch(problem):
 	# get the start state
 	start_state = problem.getStartState()
 
-	# create visited list to maintain explored nodes of a graph
+	# initialize a path list with start node
+	path = [(start_state, "End", 0)]
+
+	# maintain visited array to keep track of visited nodes
 	visited = set()
 
-	# create path_to_goal stack to store the most optimum path from start to goal
-	path_from_start = []
-
-	# check if the start_state is the goal state
-	if problem.isGoalState(start_state):
-		return []
-
-	# initialize a queue for BFS
+	# maintain a queue for traversing the graph nodes
 	queue = util.Queue()
 
-	"""
-		store the information in `node` data structure
-		Node:
-				state, tuple
-				parent, tuple
-				dir_from_parent, game.Directions
-				cost_from_start, int
-	"""
-	start_node = Node(start_state, None, None, 0)
-	queue.push(start_node)
+	# push the current path in the queue
+	queue.push(path)
 
-	# core of Uniform Cost Search
+	# until the queue gets empty, iterate
 	while not queue.isEmpty():
-		cur_node = queue.pop()
-		# check if this node has been visited
-		if cur_node not in visited:
-			visited.add(cur_node)
-			if problem.isGoalState(cur_node.state):
-				break
-			# recursiverly add node's successor
-			for successor_state in problem.getSuccessors(cur_node.state):
-				successor_node = Node(successor_state[0], cur_node, successor_state[1], cur_node.cost_from_start + successor_state[2])
-				queue.push(successor_node)
+		# get details from current path, operate on it, push it back in the queue
+		local_path = queue.pop()
+		current_state = local_path[len(local_path)-1][0]
 
-	# navigate the parent pointers to get the path from start
-	while cur_node.dir_from_parent != None:
-		path_from_start.append(cur_node.dir_from_parent)
-		cur_node = cur_node.parent
+		# check if the current state is the goal state
+		if problem.isGoalState(current_state):
+			return [i[1] for i in local_path][1:]
 
-	path_from_start.reverse()
+		# check if current state has been previously visited or not
+		if current_state not in visited:
+			# mark current state as visited
+			visited.add(current_state)
 
-	return path_from_start
+			# iterate through all the unvisited successors and add their paths to queue
+			for successor in problem.getSuccessors(current_state):
+				if successor not in visited:
+					new_path = local_path[:]
+					new_path.append(successor)
+					queue.push(new_path)
+
+	return []
 
 def uniformCostSearch(problem):
 	"""Search the node of least total cost first."""
