@@ -291,11 +291,11 @@ class CornersProblem(search.SearchProblem):
 		self.costFn = costFn
 		self.visualize = visualize
 		self.cornersVisited = []
-		self.goal = []
-		for corner in self.corners:
-			if startingGameState.hasFood(*corner):
-				self.goal.append(corner)
-		self.totalGoals = len(self.goal)
+		# self.goal = []
+		# for corner in self.corners:
+		# 	if startingGameState.hasFood(*corner):
+		# 		self.goal.append(corner)
+		# self.totalGoals = len(self.goal)
 
 		# For display purposes
 		self._visited, self._visitedlist, self._expanded = {}, [], 0
@@ -311,18 +311,18 @@ class CornersProblem(search.SearchProblem):
 		"""
 		Returns whether this search state is a goal state of the problem.
 		"""
-		isGoal = state in self.goal
-
-		# For display purposes only
-		if isGoal and self.visualize:
-			self._visitedlist.append(state)
-			import __main__
-			if '_display' in dir(__main__):
-				if 'drawExpandedCells' in dir(__main__._display): #@UndefinedVariable
-					__main__._display.drawExpandedCells(self._visitedlist) #@UndefinedVariable
+		isGoal = state in self.corners
 
 		if isGoal:
-			self.goal.remove(state)
+			self.cornersVisited.append(state)
+
+		# For display purposes only
+		# if isGoal and self.visualize and len(self.cornersVisited) > len(self.corners):
+		# 	self._visitedlist.append(state)
+		# 	import __main__
+		# 	if '_display' in dir(__main__):
+		# 		if 'drawExpandedCells' in dir(__main__._display): #@UndefinedVariable
+		# 			__main__._display.drawExpandedCells(self._visitedlist) #@UndefinedVariable
 
 		return isGoal
 

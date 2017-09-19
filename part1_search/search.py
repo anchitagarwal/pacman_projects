@@ -161,8 +161,16 @@ def breadthFirstSearch(problem):
 	# initialize a path list with start node
 	path = [(start_state, "End", 0)]
 
+	# maintain the number of corners not visited for CornersProblem
+	goals_remaining = 1
+	if "corners" in dir(problem):
+		goals_remaining = len(problem.corners)
+
 	# maintain visited array to keep track of visited nodes
 	visited = set()
+
+	# maintain a goals visited list
+	goals_visited = set()
 
 	# maintain a queue for traversing the graph nodes
 	queue = util.Queue()
@@ -171,14 +179,23 @@ def breadthFirstSearch(problem):
 	queue.push(path)
 
 	# until the queue gets empty, iterate
-	while not queue.isEmpty():
+	while not queue.isEmpty() and goals_remaining > 0:
 		# get details from current path, operate on it, push it back in the queue
 		local_path = queue.pop()
 		current_state = local_path[len(local_path)-1][0]
+		# print "CURRENT STATE: " + str(current_state)
 
 		# check if the current state is the goal state
-		if problem.isGoalState(current_state):
-			return [i[1] for i in local_path][1:]
+		if problem.isGoalState(current_state) and current_state not in goals_visited:
+			# print "GOAL: " + str(current_state)
+			# decrease remaining goals count, reset the queue and visited array
+			goals_remaining -= 1
+			goals_visited.add(current_state)
+			queue = util.Queue()
+			visited = set()
+
+			if goals_remaining == 0:
+				return [i[1] for i in local_path][1:]
 
 		# check if current state has been previously visited or not
 		if current_state not in visited:
@@ -187,7 +204,7 @@ def breadthFirstSearch(problem):
 
 			# iterate through all the unvisited successors and add their paths to queue
 			for successor in problem.getSuccessors(current_state):
-				if successor not in visited:
+				if successor[0] not in visited:
 					new_path = local_path[:]
 					new_path.append(successor)
 					queue.push(new_path)
@@ -259,52 +276,58 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 	# get the start state
 	start_state = problem.getStartState()
 
-	# create visited list to maintain explored nodes of a graph
+	# initialize a path list with start node
+	path = [(start_state, "End", 0)]
+
+	# maintain the number of corners not visited for CornersProblem
+	goals_remaining = 1
+	if "corners" in dir(problem):
+		goals_remaining = len(problem.corners)
+
+	# maintain visited array to keep track of visited nodes
 	visited = set()
 
-	# create path_to_goal stack to store the most optimum path from start to goal
-	path_from_start = []
+	# maintain a goals visited list
+	goals_visited = set()
 
-	# check if the start_state is the goal state
-	if problem.isGoalState(start_state):
-		return []
-
-	# initialize a queue for BFS
+	# maintain a priority_queue for traversing the graph nodes
 	priority_queue = util.PriorityQueue()
 
-	"""
-		store the information in `node` data structure
-		Node:
-				state, tuple
-				parent, tuple
-				dir_from_parent, game.Directions
-				cost_from_start, int
-	"""
-	start_node = Node(start_state, None, None, 0)
-	priority_queue.push(start_node, start_node.cost_from_start  + heuristic (start_node.state, problem))
+	# push the current path in the priority_queue
+	priority_queue.push(path, heuristic(start_state, problem))
 
-	# core of A* Search
-	while not priority_queue.isEmpty():
-		cur_node = priority_queue.pop()
-		# check if this node has been visited
-		if cur_node not in visited:
-			visited.add(cur_node)
-			if problem.isGoalState(cur_node.state):
-				break
-			# recursiverly add node's successor
-			for successor_state in problem.getSuccessors(cur_node.state):
-				successor_node = Node(successor_state[0], cur_node, successor_state[1], cur_node.cost_from_start + successor_state[2])
-				priority_queue.push(successor_node, successor_node.cost_from_start + heuristic (successor_node.state, problem))
+	# until the priority_queue gets empty, iterate
+	while not priority_queue.isEmpty() and goals_remaining > 0:
+		# get details from current path, operate on it, push it back in the priority_queue
+		local_path = priority_queue.pop()
+		current_state = local_path[len(local_path)-1][0]
+		# print "CURRENT STATE: " + str(current_state)
 
-	# navigate the parent pointers to get the path from start
-	while cur_node.dir_from_parent != None:
-		path_from_start.append(cur_node.dir_from_parent)
-		cur_node = cur_node.parent
+		# check if the current state is the goal state
+		if problem.isGoalState(current_state) and current_state not in goals_visited:
+			# print "GOAL: " + str(current_state)
+			# decrease remaining goals count, reset the priority_queue and visited array
+			goals_remaining -= 1
+			goals_visited.add(current_state)
+			priority_queue = util.PriorityQueue()
+			visited = set()
 
-	path_from_start.reverse()
+			if goals_remaining == 0:
+				return [i[1] for i in local_path][1:]
 
-	return path_from_start
+		# check if current state has been previously visited or not
+		if current_state not in visited:
+			# mark current state as visited
+			visited.add(current_state)
 
+			# iterate through all the unvisited successors and add their paths to priority_queue
+			for successor in problem.getSuccessors(current_state):
+				if successor[0] not in visited:
+					new_path = local_path[:]
+					new_path.append(successor)
+					priority_queue.push(new_path, heuristic(start_state, problem) + successor[2])
+
+	return []
 
 # Abbreviations
 bfs = breadthFirstSearch
