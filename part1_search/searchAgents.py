@@ -273,7 +273,7 @@ class CornersProblem(search.SearchProblem):
 	You must select a suitable state space and successor function
 	"""
 
-	def __init__(self, startingGameState, costFn = lambda x: 1, visualize=True):
+	def __init__(self, startingGameState, costFn = lambda x: 1):
 		"""
 		Stores the walls, pacman's starting position and corners.
 		"""
@@ -289,13 +289,7 @@ class CornersProblem(search.SearchProblem):
 		# in initializing the problem
 		"*** YOUR CODE HERE ***"
 		self.costFn = costFn
-		self.visualize = visualize
-		self.cornersVisited = []
-		# self.goal = []
-		# for corner in self.corners:
-		# 	if startingGameState.hasFood(*corner):
-		# 		self.goal.append(corner)
-		# self.totalGoals = len(self.goal)
+		self.unvisited_corners = list(self.corners)
 
 		# For display purposes
 		self._visited, self._visitedlist, self._expanded = {}, [], 0
@@ -305,26 +299,21 @@ class CornersProblem(search.SearchProblem):
 		Returns the start state (in your state space, not the full Pacman state
 		space)
 		"""
-		return self.startingPosition
+		# store a binary array to encode information about number of goals visited
+		goal_states = [0] * len(self.corners)
+		for i in range(len(self.corners)):
+			if self.startingPosition == self.corners[i]:
+				goal_states[i] = 1
+
+		return (self.startingPosition, tuple(goal_states))
 
 	def isGoalState(self, state):
 		"""
 		Returns whether this search state is a goal state of the problem.
 		"""
-		isGoal = state in self.corners
-
-		if isGoal:
-			self.cornersVisited.append(state)
-
-		# For display purposes only
-		# if isGoal and self.visualize and len(self.cornersVisited) > len(self.corners):
-		# 	self._visitedlist.append(state)
-		# 	import __main__
-		# 	if '_display' in dir(__main__):
-		# 		if 'drawExpandedCells' in dir(__main__._display): #@UndefinedVariable
-		# 			__main__._display.drawExpandedCells(self._visitedlist) #@UndefinedVariable
-
-		return isGoal
+		# return true when all the goal states are explored
+		# happens when goal_states list is [1,1,1,1]
+		return 0 not in state[1]
 
 	def getSuccessors(self, state):
 		"""
@@ -338,16 +327,22 @@ class CornersProblem(search.SearchProblem):
 		"""
 
 		successors = []
+		(state_position, goal_states) = state
 		for action in [Directions.NORTH, Directions.SOUTH, Directions.EAST, Directions.WEST]:
 			# Add a successor state to the successor list if the action is legal
 			# Here's a code snippet for figuring out whether a new position hits a wall:
-			x,y = state
+			x,y = state_position
 			dx, dy = Actions.directionToVector(action)
 			nextx, nexty = int(x + dx), int(y + dy)
 			hitsWall = self.walls[nextx][nexty]
 			"*** YOUR CODE HERE ***"
 			if not hitsWall:
-				nextState = (nextx, nexty)
+				# if the successor state is goal state, update goal_states
+				successor_goal_state = list(goal_states)
+				for i in range(len(self.corners)):
+					if self.corners[i] == (nextx, nexty):
+						successor_goal_state[i] = 1
+				nextState = ((nextx, nexty), tuple(successor_goal_state))
 				cost = self.costFn(nextState)
 				successors.append((nextState, action, cost))
 
@@ -387,9 +382,24 @@ def cornersHeuristic(state, problem):
 	"""
 	corners = problem.corners # These are the corner coordinates
 	walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
-
+	
 	"*** YOUR CODE HERE ***"
-	return 0 # Default to trivial solution
+	# get the visited states information from state space
+	unvisited_corners = list(state[1])
+	# for the corner heuristics, calculate L1 distance of pacman's position and all unvisited corners 
+	# return the minimum of all L1 distances
+	l_inf_dist = []
+	x1, y1 = state[0]
+	for i in range(len(corners)):
+		if unvisited_corners[i] == 0:
+			x2, y2 = corners[i]
+			l_inf_dist.append(max(abs(x1-x2), abs(y1-y2)))
+
+	if len(l_inf_dist) == 0:
+		print "STATE = " + str(state[0]) + " :: GOALS = " + str(state[1]) + " :: L_INF = " + str(l_inf_dist) + " :: MIN = 0"
+		return 0
+	print "STATE = " + str(state[0]) + " :: GOALS = " + str(state[1]) + " :: L_INF = " + str(l_inf_dist) + " :: MIN = " + str(min(l_inf_dist))
+	return min(l_inf_dist)
 
 class AStarCornersAgent(SearchAgent):
 	"A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"

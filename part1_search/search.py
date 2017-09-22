@@ -161,16 +161,8 @@ def breadthFirstSearch(problem):
 	# initialize a path list with start node
 	path = [(start_state, "End", 0)]
 
-	# maintain the number of corners not visited for CornersProblem
-	goals_remaining = 1
-	if "corners" in dir(problem):
-		goals_remaining = len(problem.corners)
-
 	# maintain visited array to keep track of visited nodes
 	visited = set()
-
-	# maintain a goals visited list
-	goals_visited = set()
 
 	# maintain a queue for traversing the graph nodes
 	queue = util.Queue()
@@ -179,23 +171,17 @@ def breadthFirstSearch(problem):
 	queue.push(path)
 
 	# until the queue gets empty, iterate
-	while not queue.isEmpty() and goals_remaining > 0:
+	while not queue.isEmpty():
 		# get details from current path, operate on it, push it back in the queue
 		local_path = queue.pop()
 		current_state = local_path[len(local_path)-1][0]
 		# print "CURRENT STATE: " + str(current_state)
 
 		# check if the current state is the goal state
-		if problem.isGoalState(current_state) and current_state not in goals_visited:
+		if problem.isGoalState(current_state):
 			# print "GOAL: " + str(current_state)
 			# decrease remaining goals count, reset the queue and visited array
-			goals_remaining -= 1
-			goals_visited.add(current_state)
-			queue = util.Queue()
-			visited = set()
-
-			if goals_remaining == 0:
-				return [i[1] for i in local_path][1:]
+			return [i[1] for i in local_path][1:]
 
 		# check if current state has been previously visited or not
 		if current_state not in visited:
@@ -204,7 +190,7 @@ def breadthFirstSearch(problem):
 
 			# iterate through all the unvisited successors and add their paths to queue
 			for successor in problem.getSuccessors(current_state):
-				if successor[0] not in visited:
+				if successor not in visited:
 					new_path = local_path[:]
 					new_path.append(successor)
 					queue.push(new_path)
@@ -324,8 +310,9 @@ def aStarSearch(problem, heuristic=nullHeuristic):
 			for successor in problem.getSuccessors(current_state):
 				if successor[0] not in visited:
 					new_path = local_path[:]
-					new_path.append(successor)
-					priority_queue.push(new_path, heuristic(start_state, problem) + successor[2])
+					new_node_cost = successor[2] + local_path[len(local_path)-1][2]
+					new_path.append((successor[0], successor[1], new_node_cost))
+					priority_queue.push(new_path, heuristic(successor[0], problem) + new_node_cost)
 
 	return []
 
