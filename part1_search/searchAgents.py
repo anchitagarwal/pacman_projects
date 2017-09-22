@@ -498,6 +498,9 @@ def foodHeuristic(state, problem):
 	"""
 	position, foodGrid = state
 	"*** YOUR CODE HERE ***"
+	# access the game state for maze distance calculation
+	startingGameState = problem.startingGameState
+
 	# get the positions of food from foodGrid and store it in a list
 	food_position = []
 	[[food_position.append((i,u)) for u, v in enumerate(foodGrid[i]) if foodGrid[i][u] is True] for i, j in enumerate(foodGrid)]
@@ -508,10 +511,60 @@ def foodHeuristic(state, problem):
 
 	# maintain a `cost` variable to store heuristic
 	# update the cost
-	l1_dist = [(i, util.manhattanDistance(i, position)) for i in food_position]
-	far_pos, cost = max(l1_dist, key=lambda x:x[1])
+	l1_dist = [(i, mazeDistance(i, position, startingGameState)) for i in food_position]
+	closest_food, cost = min(l1_dist, key=lambda x:x[1])
+	for i in food_position:
+		if not (i[0] == position[0] or i[0] == closest_food[0] or i[1] == position[1] or i[1] == closest_food[1]):
+			cost += 1
 
 	return cost
+
+class DisjointSet():
+	"""
+	This class implements the disjoint set data structure using union rank and path compression.
+	"""
+	# maintain a map to store Node object with data as their key
+	map = {}
+
+	# define Node class
+	class Node():
+		def __init__(self, data):
+			self.data = data
+			self.rank = 0
+			self.parent = self
+
+	# implement the makeSet method of disjoint set data structure
+	def makeSet(self, data):
+		node = Node(data)
+		map[data] = node
+
+	# implement the union method
+	def union(self, data1, data2):
+		node1 = map[data1]
+		node2 = map[data2]
+
+		parent1 = _findSet(node1)
+		parent2 = _findSet(node2)
+
+		if parent1.data == parent2.data:
+			return
+
+		if parent1.rank >= parent2.rank:
+			parent1.rank = (parent1.rank == parent2.rank) ? parent1.rank + 1 : parent1.rank
+			parent2.parent = parent1
+		else:
+			parent1.parent = parent2
+
+	def _findSet(self, node):
+		parent = node.parent
+		if parent == node:
+			return node
+		node.parent = _findSet(node.parent)
+		return note.parent
+
+	# implement the findSet method
+	def findSet(self, data):
+		return self._findSet(map[data]).data
 
 class ClosestDotSearchAgent(SearchAgent):
 	"Search for all food using a sequence of searches"
