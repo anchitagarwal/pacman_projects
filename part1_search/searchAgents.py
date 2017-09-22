@@ -384,22 +384,19 @@ def cornersHeuristic(state, problem):
 	walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 	
 	"*** YOUR CODE HERE ***"
-	# get the visited states information from state space
-	unvisited_corners = list(state[1])
-	# for the corner heuristics, calculate L1 distance of pacman's position and all unvisited corners 
-	# return the minimum of all L1 distances
-	l_inf_dist = []
-	x1, y1 = state[0]
-	for i in range(len(corners)):
-		if unvisited_corners[i] == 0:
-			x2, y2 = corners[i]
-			l_inf_dist.append(max(abs(x1-x2), abs(y1-y2)))
-
-	if len(l_inf_dist) == 0:
-		print "STATE = " + str(state[0]) + " :: GOALS = " + str(state[1]) + " :: L_INF = " + str(l_inf_dist) + " :: MIN = 0"
+	
+	position = state[0]
+	unvisited_states = state[1]
+	# get the unvisited corners as a list
+	unvisited_corners = [v for i, v in enumerate(corners) if unvisited_states[i] == 0]
+	# calculate the manhattan distance of current position and unvisited states
+	l1_dist = [(i, util.manhattanDistance(i, position)) for i in unvisited_corners]
+	if len(l1_dist) == 0:
 		return 0
-	print "STATE = " + str(state[0]) + " :: GOALS = " + str(state[1]) + " :: L_INF = " + str(l_inf_dist) + " :: MIN = " + str(min(l_inf_dist))
-	return min(l_inf_dist)
+
+	corner, cost = max(l1_dist, key=lambda x:x[1])
+
+	return cost
 
 class AStarCornersAgent(SearchAgent):
 	"A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
