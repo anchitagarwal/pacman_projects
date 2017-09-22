@@ -385,16 +385,24 @@ def cornersHeuristic(state, problem):
 	
 	"*** YOUR CODE HERE ***"
 	
+	# get the position and unvisited corners
 	position = state[0]
-	unvisited_states = state[1]
-	# get the unvisited corners as a list
-	unvisited_corners = [v for i, v in enumerate(corners) if unvisited_states[i] == 0]
-	# calculate the manhattan distance of current position and unvisited states
-	l1_dist = [(i, util.manhattanDistance(i, position)) for i in unvisited_corners]
-	if len(l1_dist) == 0:
+	unvisited = state[1]
+	unvisited_corners = [j for i,j in enumerate(corners) if unvisited[i] == 0]
+
+	# if all the corners are visited, return 0
+	if len(unvisited_corners) == 0:
 		return 0
 
-	corner, cost = max(l1_dist, key=lambda x:x[1])
+	# maintain a `cost` variable to store heuristic
+	# update the cost
+	cost = 0
+	while len(unvisited_corners) != 0:
+		l1_dist = [(i, util.manhattanDistance(i, position)) for i in unvisited_corners]
+		closest_corner, closest_corner_cost = min(l1_dist, key=lambda x:x[1])
+		cost += closest_corner_cost
+		position = closest_corner
+		unvisited_corners.remove(closest_corner)
 
 	return cost
 
@@ -490,7 +498,20 @@ def foodHeuristic(state, problem):
 	"""
 	position, foodGrid = state
 	"*** YOUR CODE HERE ***"
-	return 0
+	# get the positions of food from foodGrid and store it in a list
+	food_position = []
+	[[food_position.append((i,u)) for u, v in enumerate(foodGrid[i]) if foodGrid[i][u] is True] for i, j in enumerate(foodGrid)]
+
+	# if all the corners are visited, return 0
+	if len(food_position) == 0:
+		return 0
+
+	# maintain a `cost` variable to store heuristic
+	# update the cost
+	l1_dist = [(i, util.manhattanDistance(i, position)) for i in food_position]
+	far_pos, cost = max(l1_dist, key=lambda x:x[1])
+
+	return cost
 
 class ClosestDotSearchAgent(SearchAgent):
 	"Search for all food using a sequence of searches"
