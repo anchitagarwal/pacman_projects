@@ -503,7 +503,6 @@ def foodHeuristic(state, problem):
 
 	# get the positions of food from foodGrid and store it in a list
 	food_position = foodGrid.asList()
-	# [[food_position.append((i,u)) for u, v in enumerate(foodGrid[i]) if foodGrid[i][u] is True] for i, j in enumerate(foodGrid)]
 
 	# if all the corners are visited, return 0
 	if len(food_position) == 0:
@@ -578,7 +577,7 @@ class ClosestDotSearchAgent(SearchAgent):
 		problem = AnyFoodSearchProblem(gameState)
 
 		"*** YOUR CODE HERE ***"
-		util.raiseNotDefined()
+		return search.uniformCostSearch(problem)
 
 class AnyFoodSearchProblem(PositionSearchProblem):
 	"""
@@ -614,7 +613,7 @@ class AnyFoodSearchProblem(PositionSearchProblem):
 		x,y = state
 
 		"*** YOUR CODE HERE ***"
-		util.raiseNotDefined()
+		return state in self.food.asList()
 
 def mazeDistance(point1, point2, gameState):
 	"""
