@@ -502,69 +502,52 @@ def foodHeuristic(state, problem):
 	startingGameState = problem.startingGameState
 
 	# get the positions of food from foodGrid and store it in a list
-	food_position = []
-	[[food_position.append((i,u)) for u, v in enumerate(foodGrid[i]) if foodGrid[i][u] is True] for i, j in enumerate(foodGrid)]
+	food_position = foodGrid.asList()
+	# [[food_position.append((i,u)) for u, v in enumerate(foodGrid[i]) if foodGrid[i][u] is True] for i, j in enumerate(foodGrid)]
 
 	# if all the corners are visited, return 0
 	if len(food_position) == 0:
 		return 0
 
-	# maintain a `cost` variable to store heuristic
-	# update the cost
-	l1_dist = [(i, mazeDistance(i, position, startingGameState)) for i in food_position]
-	closest_food, cost = min(l1_dist, key=lambda x:x[1])
-	for i in food_position:
-		if not (i[0] == position[0] or i[0] == closest_food[0] or i[1] == position[1] or i[1] == closest_food[1]):
-			cost += 1
+	# maintain a priority queue to store closest food
+	priority_queue = util.PriorityQueue()
+	visited = set()
+	priority_queue.push((position, 0), 0)
+	cost = 0
 
-	return cost
+	heuristicInfo = problem.heuristicInfo
+	if heuristicInfo.get('Initialized') is None:
+		for i in food_position:
+			for j in food_position:
+				if (i,j) not in heuristicInfo and (j,i) not in heuristicInfo:
+					heuristicInfo[(i,j)] = mazeDistance(i, j, startingGameState)
+		heuristicInfo['Initialized'] = True
 
-class DisjointSet():
-	"""
-	This class implements the disjoint set data structure using union rank and path compression.
-	"""
-	# maintain a map to store Node object with data as their key
-	map = {}
-
-	# define Node class
-	class Node():
-		def __init__(self, data):
-			self.data = data
-			self.rank = 0
-			self.parent = self
-
-	# implement the makeSet method of disjoint set data structure
-	def makeSet(self, data):
-		node = Node(data)
-		map[data] = node
-
-	# implement the union method
-	def union(self, data1, data2):
-		node1 = map[data1]
-		node2 = map[data2]
-
-		parent1 = _findSet(node1)
-		parent2 = _findSet(node2)
-
-		if parent1.data == parent2.data:
-			return
-
-		if parent1.rank >= parent2.rank:
-			parent1.rank = (parent1.rank == parent2.rank) ? parent1.rank + 1 : parent1.rank
-			parent2.parent = parent1
+	def mazeDistanceHeuristic(i, j, heuristicInfo, problem):
+		if (i,j) in heuristicInfo:
+			return heuristicInfo.get((i,j))
+		elif (j,i) in heuristicInfo:
+			return heuristicInfo.get((j,i))
 		else:
-			parent1.parent = parent2
+			heuristicInfo[(i,j)] = mazeDistance(i, j, startingGameState)
+			return heuristicInfo[(i,j)]
 
-	def _findSet(self, node):
-		parent = node.parent
-		if parent == node:
-			return node
-		node.parent = _findSet(node.parent)
-		return note.parent
-
-	# implement the findSet method
-	def findSet(self, data):
-		return self._findSet(map[data]).data
+	while len(visited) != len(food_position) + 1:
+		current_pos, current_cost = priority_queue.pop()
+		if current_pos in visited:
+			continue
+		visited.add(current_pos)
+		cost += current_cost
+		for food in foodGrid.asList():
+			if food in visited:
+				continue
+			priority_queue.push(
+				(food, mazeDistanceHeuristic(food, current_pos, heuristicInfo, startingGameState)),
+				mazeDistanceHeuristic(food, current_pos, heuristicInfo, startingGameState)
+			)
+	if cost <= 1:
+		return cost
+	return cost / 2
 
 class ClosestDotSearchAgent(SearchAgent):
 	"Search for all food using a sequence of searches"
