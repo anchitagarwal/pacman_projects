@@ -519,16 +519,16 @@ def foodHeuristic(state, problem):
 		for i in food_position:
 			for j in food_position:
 				if (i,j) not in heuristicInfo and (j,i) not in heuristicInfo:
-					heuristicInfo[(i,j)] = mazeDistance(i, j, startingGameState)
+					heuristicInfo[(i,j)] = util.manhattanDistance(i, j)
 		heuristicInfo['Initialized'] = True
 
-	def mazeDistanceHeuristic(i, j, heuristicInfo, problem):
+	def manhattanHeuristic(i, j, heuristicInfo):
 		if (i,j) in heuristicInfo:
 			return heuristicInfo.get((i,j))
 		elif (j,i) in heuristicInfo:
 			return heuristicInfo.get((j,i))
 		else:
-			heuristicInfo[(i,j)] = mazeDistance(i, j, startingGameState)
+			heuristicInfo[(i,j)] = util.manhattanDistance(i, j)
 			return heuristicInfo[(i,j)]
 
 	while len(visited) != len(food_position) + 1:
@@ -541,12 +541,12 @@ def foodHeuristic(state, problem):
 			if food in visited:
 				continue
 			priority_queue.push(
-				(food, mazeDistanceHeuristic(food, current_pos, heuristicInfo, startingGameState)),
-				mazeDistanceHeuristic(food, current_pos, heuristicInfo, startingGameState)
+				(food, manhattanHeuristic(food, current_pos, heuristicInfo)),
+				manhattanHeuristic(food, current_pos, heuristicInfo)
 			)
-	if cost <= 1:
-		return cost
-	return cost / 2
+	# if cost <= 1:
+	# 	return cost
+	return cost
 
 class ClosestDotSearchAgent(SearchAgent):
 	"Search for all food using a sequence of searches"
