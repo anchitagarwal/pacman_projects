@@ -501,6 +501,8 @@ def foodHeuristic(state, problem):
 	# access the game state for maze distance calculation
 	startingGameState = problem.startingGameState
 
+	walls = problem.walls
+
 	# get the positions of food from foodGrid and store it in a list
 	food_position = foodGrid.asList()
 
@@ -514,12 +516,35 @@ def foodHeuristic(state, problem):
 	priority_queue.push((position, 0), 0)
 	cost = 0
 
+	def wallsInPath(xy1, xy2):
+		x1, y1 = xy1
+		x2, y2 = xy2
+		x_diff = abs(x1 - x2)
+		y_diff = abs(y1 - y2)
+
+		min_x = x1 if x1 <= x2 else x2
+		min_y = y1 if y1 <= y2 else y2
+
+		pathWalls = 0
+		for i in range(min_x, min_x + x_diff + 1):
+			if walls[i][y1]:
+				pathWalls += 1
+			if walls[i][y2]:
+				pathWalls += 1
+		for j in range(min_y, min_y + y_diff + 1):
+			if walls[x1][j]:
+				pathWalls += 1
+			if walls[x2][j]:
+				pathWalls += 1
+
+		return pathWalls
+
 	heuristicInfo = problem.heuristicInfo
 	if heuristicInfo.get('Initialized') is None:
 		for i in food_position:
 			for j in food_position:
 				if (i,j) not in heuristicInfo and (j,i) not in heuristicInfo:
-					heuristicInfo[(i,j)] = util.manhattanDistance(i, j)
+					heuristicInfo[(i,j)] = util.manhattanDistance(i, j) + wallsInPath(i, j)
 		heuristicInfo['Initialized'] = True
 
 	def manhattanHeuristic(i, j, heuristicInfo):
@@ -528,7 +553,7 @@ def foodHeuristic(state, problem):
 		elif (j,i) in heuristicInfo:
 			return heuristicInfo.get((j,i))
 		else:
-			heuristicInfo[(i,j)] = util.manhattanDistance(i, j)
+			heuristicInfo[(i,j)] = util.manhattanDistance(i, j) + wallsInPath(i, j)
 			return heuristicInfo[(i,j)]
 
 	while len(visited) != len(food_position) + 1:
@@ -544,9 +569,9 @@ def foodHeuristic(state, problem):
 				(food, manhattanHeuristic(food, current_pos, heuristicInfo)),
 				manhattanHeuristic(food, current_pos, heuristicInfo)
 			)
-	# if cost <= 1:
-	# 	return cost
-	return cost
+	if cost <= 1:
+		return cost
+	return cost / 2
 
 class ClosestDotSearchAgent(SearchAgent):
 	"Search for all food using a sequence of searches"
